@@ -21,13 +21,32 @@
 export const CAL_LINK: string = "rumi-ai/call-30min";
 export const CAL_LINK_60MIN: string = "rumi-ai/discovery-call-60min";
 
+/**
+ * The public Cal.com URL for a booking slug, or "" for the empty slug.
+ *
+ * A FUNCTION rather than two template literals because there is now a third
+ * caller: CalEmbed builds this same URL for the recovery link it shows when the
+ * calendar fails to load, and a component re-deriving it inline would be the
+ * fourth independent copy of "https://cal.com/" + slug. The whole reason
+ * CALENDLY_URL stopped being a standalone literal is that a rename fixed in one
+ * place and missed in another points the embed and the escape hatch at two
+ * different calendars — and the escape hatch is read only when the embed has
+ * already failed, so a stale one is discovered at the worst possible moment.
+ *
+ * "" in, "" out: an empty slug means no event type of that length exists, and
+ * "https://cal.com/" is a live URL that resolves to a signup page, not to a
+ * calendar. Handing that to someone who has paid is worse than handing them
+ * nothing, because it looks like it worked.
+ */
+export function calUrlFor(slug: string): string {
+  return slug ? `https://cal.com/${slug}` : "";
+}
+
 // Derived, never written out twice. These used to be independent literals, and
 // a rename that fixed one and missed the other would send the inline embed and
 // the "open in a new tab" link to two different calendars.
-export const CALENDLY_URL: string = `https://cal.com/${CAL_LINK}`;
-export const CALENDLY_URL_60MIN: string = CAL_LINK_60MIN
-  ? `https://cal.com/${CAL_LINK_60MIN}`
-  : "";
+export const CALENDLY_URL: string = calUrlFor(CAL_LINK);
+export const CALENDLY_URL_60MIN: string = calUrlFor(CAL_LINK_60MIN);
 
 // WHY THE 60-MINUTE SLUG IS NO LONGER READ FROM NEXT_PUBLIC_CAL_LINK_60MIN.
 // It was env-sourced for one reason: the event type did not exist, so "" was

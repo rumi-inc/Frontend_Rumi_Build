@@ -2,6 +2,42 @@
 
 ## Booking / Cal.com
 
+### P0 — the LIVE booking funnel on www.rumi.build is 404ing, and it is not this repo
+**Found 2026-09-19.** `https://www.rumi.build/book` serves a Cal.com inline embed
+pointed at **`rumi-app/30-min-meeting`** — both halves of which were renamed away on
+2026-08-05 (`rumi-app` → `rumi-ai`, `30-min-meeting` → `call-30min`). Cal.com issues
+no redirect, so that page renders "Error Code: 404. Cal Link seems to be wrong."
+That page also takes **no payment at all** — it is a bare "Book a 30-minute call"
+demo page with no Stripe.
+
+That deployment is **not built from this repo** (see CLAUDE.md): its nav says
+"Request a demo", which has never appeared in this repo's history. Fixing it means
+working in the twin, `rumi-inc/Frontend_Rumi_AIEmployees` → Vercel project
+`rumi-build`. Nothing in *this* repo can fix it, and this repo currently serves no
+domain.
+
+Corroborating evidence that the funnel has been dead for weeks: Cal.com has sent
+exactly **one** booking confirmation since 2026-08-01 (on 2026-08-05), and it was for
+a **"15-min discovery call"** — not for `call-30min` or `discovery-call-60min`.
+
+### P0 — nobody has verified that `call-30min` and `discovery-call-60min` resolve
+`src/lib/data.ts` hardcodes `rumi-ai/call-30min` and `rumi-ai/discovery-call-60min`.
+Both were added on 2026-08-05 and **no booking has ever arrived on either one.** The
+only event Cal.com has actually confirmed bookings for is a 15-minute discovery call,
+whose slug is not in this repo at all.
+
+These may be correct and simply unused, or they may be a third dead rename. It cannot
+be settled from an agent session — cal.com is blocked by the org egress proxy — so it
+has to be checked by hand against the Cal.com dashboard: open `https://cal.com/rumi-ai`
+and read off the live event slugs. **Do not deploy a guessed slug**: the page it lands
+on is `/book/success`, reached only after a card is charged.
+
+Partly mitigated as of this change: `CalEmbed` now listens for Cal.com's `linkFailed`
+event and renders a recovery block (direct link + `support@rumi.build`) instead of
+Cal's raw 404, so a dead slug no longer strands a paying customer with nothing to
+click. That handles the symptom; it does not make the slug right.
+
+
 ### ~~Create the 60-minute Cal.com event type~~ — DONE 2026-08-05
 `rumi-ai/discovery-call-60min` exists, and `CAL_LINK_60MIN` in `src/lib/data.ts` names it, so a $125 buyer now gets a 60-minute calendar on `/book/success` instead of the email-you-times fallback. That fallback is still live code for the case where a length has no event type — it just has no configuration reaching it today.
 
