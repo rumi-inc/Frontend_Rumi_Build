@@ -12,26 +12,53 @@ twin — that reverts the brand. Different GitHub org, too:
 `Rumi-team/…` here, `rumiai-ai/…` there. **Never port a change between them** — matching
 filenames belong to separate sites.
 
-## The domain: one deployment, four hosts, one canonical
+## The domain: THIS REPO CURRENTLY SERVES NO DOMAIN
 
-Settled 2026-08-04, re-verified 2026-08-05. This checkout is linked to the Vercel
-project **`rumi-ai`** (`.vercel/project.json`), and that one deployment answers on
-**all four** of `rumiai.ai`, `www.rumiai.ai`, `rumi.build` and `www.rumi.build` —
-both apexes 308 to their `www`, and both `www` hosts return byte-identical HTML.
-The twin `../Frontend_Rumi_AIEmployees` is linked to a project *named* `rumi-build`
-which does **not** serve rumi.build. Never link this checkout to that project.
+**Re-verified 2026-09-19 against the Vercel API, and it reverses what this
+section used to say.** The old text ("one deployment, four hosts, one
+canonical") described the world on 2026-08-05. It is no longer true, and acting
+on it means shipping a fix to a project nobody visits.
 
-Because every alias serves the same build, naming the wrong one is invisible —
-nothing 404s, no test goes red, and the only symptom is the site telling search
-engines its canonical copy lives somewhere the sitemap never advertises. So the
-canonical host is a single decision, made once: **`https://www.rumiai.ai`**,
-matching `NEXT_PUBLIC_SITE_URL` on the project. It is authored in exactly one
-place — `metadataBase` in `src/app/layout.tsx` — and every per-page canonical and
-`og:url` is relative so it resolves through that. `sitemap.ts` BASE, `robots.ts`
-and every URL in `lib/llms-content.ts` must agree, and
+What the Vercel API reports today (`list_project_domains`, which is the live
+per-domain record — note that `get_project`'s own `domains` array is a stale
+denormalized cache and still lists the old mapping, so do not trust it):
+
+| Host | 308s to | Vercel project | Built from |
+| --- | --- | --- | --- |
+| `rumi.build` | `www.rumi.build` | `rumi-build` (`prj_c8X8nh8UyToR2ydd6vxfmfpRhosn`) | **not this repo** — see below |
+| `www.rumi.build` | — | `rumi-build` | **not this repo** |
+| `rumiai.ai` | `www.rumiai.ai` | `rumi-ai-website` (`prj_NFNLDqKUiZa9svVBQq9wSxgd5Ybz`) | `RumiAI-LLC/rumi_ai_website` |
+| `www.rumiai.ai` | — | `rumi-ai-website` | `RumiAI-LLC/rumi_ai_website` |
+
+**The project this checkout used to be linked to — `rumi-ai`
+(`prj_DbGCHRJNYqm6K7D1NATKKNXldyI1`) — has zero domains attached.** The domain
+records carry `updatedAt` of 2026-09-16, so the move is recent. There is also no
+`.vercel/project.json` in this checkout any more, so nothing local says where a
+`vercel deploy` from here would land.
+
+The practical consequence, and the reason this section is now a warning rather
+than a fact sheet: **a change merged and deployed from this repo changes nothing
+that a customer can reach.** Confirm the current mapping before promising anyone
+a deploy, and confirm it from `list_project_domains` rather than from this file
+— this section has been wrong twice.
+
+`www.rumi.build` is NOT this codebase. Its `/book` ships nav copy ("Request a
+demo") that has never existed anywhere in this repo's git history, a navy nav
+(this repo has shipped a white nav since v1.2.0.0), and no Stripe checkout at
+all. It is the near-clone twin described above. Do not "fix" this repo expecting
+that site to change, and do not port files between them.
+
+### The canonical host, if this repo is ever deployed again
+
+Unchanged as a code invariant: **`https://www.rumiai.ai`**, authored in exactly
+one place — `metadataBase` in `src/app/layout.tsx` — with every per-page
+canonical and `og:url` relative so it resolves through that. `sitemap.ts` BASE,
+`robots.ts` and every URL in `lib/llms-content.ts` must agree, and
 `tests/unit/self-reference.test.ts` walks all of `src/` and fails if any of them
-drift (it derives the expected host from `metadataBase` rather than restating it,
-so moving the site stays one edit).
+drift (it derives the expected host from `metadataBase` rather than restating
+it, so moving the site stays one edit). Note that that host is now served by a
+different project, which is a question for whoever owns the redirect plan, not
+something to silently re-point here.
 
 Two deliberate exceptions, both pinned by that test: `SUPPORT_EMAIL` is still
 `support@rumi.build` pending confirmation that an `@rumiai.ai` mailbox exists

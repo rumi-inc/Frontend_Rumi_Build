@@ -1,5 +1,11 @@
 import { describe, expect, it } from "vitest";
-import { CAL_LINK, CALENDLY_URL, CAL_LINK_60MIN, CALENDLY_URL_60MIN } from "@/lib/data";
+import {
+  CAL_LINK,
+  CALENDLY_URL,
+  CAL_LINK_60MIN,
+  CALENDLY_URL_60MIN,
+  calUrlFor,
+} from "@/lib/data";
 
 // ── Why this file exists ──────────────────────────────────────────────────────
 // On 2026-08-05 the Cal.com profile username was renamed from `rumi-app` to
@@ -133,5 +139,25 @@ describe("the Cal.com slug is shaped like a slug", () => {
       expect(CAL_LINK_60MIN).not.toBe(CAL_LINK);
       expect(CALENDLY_URL_60MIN).not.toBe(CALENDLY_URL);
     }
+  });
+});
+
+describe("calUrlFor", () => {
+  // The helper both constants and CalEmbed's recovery link now read through, so
+  // the embed and the escape hatch beside it cannot name different calendars.
+  it("builds the public Cal.com URL for a slug", async () => {
+    expect(calUrlFor("someone/a-call")).toBe("https://cal.com/someone/a-call");
+  });
+
+  it("returns the empty string for a length with no event type", async () => {
+    // The branch that matters. "https://cal.com/" is a LIVE url — it serves
+    // Cal.com's own page, not a 404 — so a naive concatenation hands someone
+    // who has paid a link that looks like it worked and books nothing.
+    expect(calUrlFor("")).toBe("");
+  });
+
+  it("is what both exported URLs are derived from", async () => {
+    expect(CALENDLY_URL).toBe(calUrlFor(CAL_LINK));
+    expect(CALENDLY_URL_60MIN).toBe(calUrlFor(CAL_LINK_60MIN));
   });
 });
